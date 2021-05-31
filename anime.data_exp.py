@@ -1,3 +1,6 @@
+# P.~Mandrik, 2021
+# https://github.com/pmandrik/AnimeRecommendationSystem2020
+# based on https://www.kaggle.com/hernan4444/anime-recommendation-database-2020
 
 import pandas
 from matplotlib import pyplot as plt
@@ -11,7 +14,7 @@ def get_colors(N_colors):
    ]
   return [ tuple(int(h[i:i+2], 16)/255. for i in (0, 2, 4)) for h in hcolors  ]
 
-###################################### Explore data from "anime.csv"
+###################################### Explore data from "anime.csv" ######################################
 all_data = pandas.read_csv("anime.csv", dtype=str) 
 print ( all_data )
 print ("anime.csv feathes = ", list(all_data.columns))
@@ -81,7 +84,8 @@ Year  = defaultdict(int)
 years  = []
 months = []
 years_classes  = []
-for val in all_data['Aired']:
+old_titles = []
+for val, name, score in zip(all_data['Aired'], all_data['Name'], all_data['Score']):
   vr = val.split()
   y = 'Unknown'
   m = 'Unknown'
@@ -104,86 +108,106 @@ for val in all_data['Aired']:
   else : 
     years_classes += [ 'Unknown' ]
 
+  if not y.isdigit() : continue
+  if int(y) < 1950 :
+    old_titles += [ [y, name, score] ]
+
+if False :
+  for t in sorted( old_titles, key=lambda x : x[0] ):
+    print( t[1], " (",t[0],",", t[2],")", sep='', end=', ')
+
 print("anime Month = ", dict(Month).keys(), sum(Month.values()) )
 print("anime Year = ", dict(Year).keys(), sum(Year.values()) )
 all_data['Year'] = years
 all_data['Month'] = months
 all_data['Year_class'] = years_classes
 
-###################################### Plots
+###################################### Plots ############################################################################
 score_var  = 'Score'
 fitches_t0 = ['Genders', 'Type', 'Source', 'Rating', 'Year_class', 'Month'] # average + errors
 fitches_t1 = ['Members', 'Plan to Watch', 'Favorites', 'Watching', 'Completed', 'On-Hold', 'Dropped'] # graph 
 fitches_t2 = ['Producers', 'Licensors', 'Studios'] # plot average ???
 
-################### Boxplots + Piecharts
-for f in fitches_t0 :
-  continue
-  all_data[f] = all_data[f].str.split(', ')
-  
-  datas = defaultdict(list)
-  for score, types in zip( all_data[score_var], all_data[f] ):
-    if score == "Unknown": 
-      score = 0
-      continue
-    for type in types :
-      datas[ type ] += [ float(score) ]
+################### Boxplots/Violinplot + Piecharts ######################################
+sort_by_raiting = False
+if True : 
+  for f in fitches_t0 :
+    all_data[f] = all_data[f].str.split(', ')
+    
+    datas = defaultdict(list)
+    for score, types in zip( all_data[score_var], all_data[f] ):
+      if score == "Unknown": 
+        score = 0
+        continue
+      for type in types :
+        datas[ type ] += [ float(score) ]
 
-  if   f == 'Year_class' : 
-    sorted_datas = sorted(datas.items(), key=lambda f : int(f[0].split("-")[0]) if f[0] !='Unknown' else 0 )
-  elif f == 'Month'    :    
-    sorted_datas = sorted(datas.items(), key=lambda f : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Unknown'].index( f[0] ) )
-  else :
-    sorted_datas = sorted(datas.items(), key=lambda f : sum(f[1])/len(f[1]) )
+    sorted_datas = sorted(datas.items(), key=lambda f : f[0] )
+    sorted_datas = [ item for item in reversed(sorted_datas) ]
 
-  fig, ax = plt.subplots()
-  ax.set_title( "Anime " + f )
-  plt.gcf().subplots_adjust(left=0.20)
-  if f == "Genders" : 
-    ax.set_title( "Anime Genre" )
-    fig.set_figheight( 2*fig.get_figheight() )
-  if f == "Rating" : 
-    ax.set_title( "Anime Age rating" )
-    plt.gcf().subplots_adjust(left=0.35)
-  if f == 'Year_class' : 
-    ax.set_title( "Anime Release year" )
-  if f == 'Month' : 
-    ax.set_title( "Anime Release month" )
-  ax.boxplot( [f[1] for f in sorted_datas], vert=False, flierprops=dict(markerfacecolor='g', marker='D') )
-  ax.set_yticklabels( [f[0] for f in sorted_datas] )
-  ax.set_xlabel('MyAnimelist Score')
-  plt.savefig('images/box_' + f + '.pdf', bbox_inches='tight')
+    if sort_by_raiting : 
+      if   f == 'Year_class' : 
+        sorted_datas = sorted(datas.items(), key=lambda f : int(f[0].split("-")[0]) if f[0] !='Unknown' else 0 )
+      elif f == 'Month'    :    
+        sorted_datas = sorted(datas.items(), key=lambda f : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Unknown'].index( f[0] ) )
+      else :
+        sorted_datas = sorted(datas.items(), key=lambda f : sum(f[1])/len(f[1]) )
 
-  # pie
-  fig, ax = plt.subplots()
-  sorted_datas = sorted(datas.items(), key=lambda f : sum(f[1]) )
+    fig, ax = plt.subplots()
+    ax.set_title( "Anime " + f )
+    plt.gcf().subplots_adjust(left=0.20)
+    if f == "Genders" : 
+      ax.set_title( "Anime Genre" )
+      fig.set_figheight( 2*fig.get_figheight() )
+    if f == "Rating" : 
+      ax.set_title( "Anime Age rating" )
+      plt.gcf().subplots_adjust(left=0.35)
+    if f == 'Year_class' : 
+      ax.set_title( "Anime Release year" )
+    if f == 'Month' : 
+      ax.set_title( "Anime Release month" )
+    if True  : 
+      ax.boxplot( [f[1] for f in sorted_datas], vert=False, flierprops=dict(markerfacecolor='g', marker='D',markersize=2) )
+      ax.set_yticklabels( [f[0] for f in sorted_datas] )
+    if False  : 
+      ax.violinplot( [f[1] for f in sorted_datas], vert=False, showmeans=True, showmedians=False )
+      ax.set_yticks( [1+i for i in range(len(sorted_datas))] )
+      ax.set_yticklabels( [f[0] for f in sorted_datas] )
 
-  data_x = [len(f[1]) for f in sorted_datas]
-  data_y = [f[0] for f in sorted_datas]
+    ax.set_xlabel('MyAnimelist Score')
+    plt.savefig('images/box_' + f + '.pdf', bbox_inches='tight')
 
-  if f == 'Source':
-    data_x = data_x[-9:] + [ sum(data_x[:-9]) ]
-    data_y = data_y[-9:] + [ '...' ]
-  if f == 'Genders':
-    data_x = data_x[-16:] + [ sum(data_x[:-18]) ]
-    data_y = data_y[-16:] + [ '...' ]
-  if f == 'Year_class':
-    data_x = data_x[-8:] + [ sum(data_x[:-8]) ]
-    data_y = data_y[-8:] + [ '...' ]
+    # pie
+    fig, ax = plt.subplots()
+    sorted_datas = sorted(datas.items(), key=lambda f : sum(f[1]) )
 
-  patches, texts, autotexts = ax.pie(data_x, labels = data_y, autopct='%d%%')
-  ax.set(aspect="equal", title="Fraction of Anime films")
-  plt.setp(autotexts, size=12, weight="bold", color="white")
+    data_x = [len(f[1]) for f in sorted_datas]
+    data_y = [f[0] for f in sorted_datas]
 
-  plt.title("% of Anime per " + f)
-  if f == "Genders" : plt.title( "% of Anime per Genre" )
-  if f == "Rating"  : plt.title( "% of Anime per Age rating" )
-  if f == 'Year_class' : plt.title( "% of Anime per Release year" )
-  if f == 'Month' :      plt.title( "% of Anime per Release month" )
-  plt.savefig('images/pie_' + f + '.pdf', bbox_inches='tight')
-  # plt.show()
+    if f == 'Source':
+      data_x = data_x[-9:] + [ sum(data_x[:-9]) ]
+      data_y = data_y[-9:] + [ '...' ]
+    if f == 'Genders':
+      data_x = data_x[-16:] + [ sum(data_x[:-18]) ]
+      data_y = data_y[-16:] + [ '...' ]
+    if f == 'Year_class':
+      data_x = data_x[-8:] + [ sum(data_x[:-8]) ]
+      data_y = data_y[-8:] + [ '...' ]
 
-################### Stackplots per Year
+    patches, texts, autotexts = ax.pie(data_x, labels = data_y, autopct='%d%%')
+    ax.set(aspect="equal", title="Fraction of Anime films")
+    plt.setp(autotexts, size=12, weight="bold", color="white")
+
+    plt.title("% of Anime per " + f)
+    if f == "Genders" : plt.title( "% of Anime per Genre" )
+    if f == "Rating"  : plt.title( "% of Anime per Age rating" )
+    if f == 'Year_class' : plt.title( "% of Anime per Release year" )
+    if f == 'Month' :      plt.title( "% of Anime per Release month" )
+    plt.savefig('images/pie_' + f + '.pdf', bbox_inches='tight')
+    # plt.show()
+  exit()
+
+################### Stackplots per Year ######################################
 total_number_of_animas = defaultdict(int)
 for f in ['Genders', 'Type', 'Source', 'Rating'] :
   continue
@@ -261,7 +285,7 @@ if total_number_of_animas:
   plt.ylabel('Number of Anime')
   plt.savefig('images/stack_total_sum.pdf', bbox_inches='tight')
 
-################### number of voters
+################### Number of Voters ######################################
 if False:
   # Add number of voters
   def get_voters(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10):
@@ -335,7 +359,7 @@ if False:
     plt.savefig('images/pie_nvotes_' + f + '.pdf', bbox_inches='tight')
   exit()
 
-################### create groups of animas base on number of episodes
+################### Create groups of animas base on number of episodes
 if False:
   N_episodes_regions = [1, 5, 10, 20, 30, 45, 70, 100, 9000]
   # number of 'Episodes'
@@ -393,12 +417,12 @@ if False:
   exit()
 
 ################### create groups of animas base on duration
-if False:
+if False :
   times = []
   weights = []
   def get_time( time_raw ):
     items = time_raw.split()
-    time = 0
+    time = -1
     for i, val in enumerate(items):
       if val == "sec." : 
         time += int( items[i-1] )/60.
@@ -409,11 +433,13 @@ if False:
     return time
 
   for key, value in Durations.items():
+    #if get_time( key ) < 0.25:
+    #  print( get_time( key ), key, value )
     times += [ get_time( key ) ]
     weights += [ value ]
 
   fig, ax = plt.subplots(tight_layout=True)
-  hist = ax.hist(times, weights=weights, bins=50, facecolor='g', edgecolor='#169acf',)
+  hist = ax.hist(times, weights=weights, bins= np.arange(0, 175, 175/50.) , facecolor='g', edgecolor='#169acf',)
   ax.set_xlabel('Duration of Anime per episode [min.]')
   ax.set_ylabel('Number of Anime')
   plt.savefig('images/hist_duration.pdf', bbox_inches='tight')
@@ -432,7 +458,7 @@ if False:
     year   = tmp["Year"].to_list()
     h2_x_year += [ float(s) if s != 'Unknown' else 2000 for s in year ]
 
-  print(h2_x, h2_y)
+  # print(h2_x, h2_y)
   fig, ax = plt.subplots(tight_layout=True)
   hist = ax.hist2d(h2_x, h2_y, bins=[np.arange(1, 10, 0.25), np.arange(0, 160, 2.5)], norm=colors.LogNorm())
   ax.set_xlabel('MyAnimelist Score')
@@ -469,7 +495,6 @@ if False :
 
 ################### funny correlations
 if False :
-
   all_data[ 'Japanese name - Lenght' ] = all_data.apply(lambda x: len(x['Japanese name']), axis=1)
   all_data[ 'Japanese name - Number of Words' ] = all_data.apply(lambda x: len(x['Japanese name'].split()), axis=1)
   all_data[ 'English name - Lenght' ] = all_data.apply(lambda x: len(x['English name']), axis=1)
@@ -503,6 +528,8 @@ if False :
       plt.savefig('images/hist_N_' + postfix + '.pdf', bbox_inches='tight',)
 
   fs = ['Genders', 'Type', 'Source', 'Rating', 'English name - Lenght', 'English name - Number of Words', 'Japanese name - Lenght']
+  fs = ['Genders']
+
   for f in ['Genders', 'Type', 'Source', 'Rating'] : 
     all_data[f] = all_data[f].str.split(', ')
 
@@ -516,10 +543,11 @@ if False :
       tmp = tmp[ tmp[fy] != "Unknown" ]
 
       xx, yy = [], []
+      ws = []
 
       types_vx = []
       types_vy = []
-      for x, y in zip( tmp[fx], tmp[fy] ):
+      for x, y, score in zip( tmp[fx], tmp[fy], tmp['Score'] ):
         if not type(x) == type([]): x = [x]
         if not type(y) == type([]): 
           y = [y]
@@ -536,10 +564,33 @@ if False :
             if vy == vx : continue
             xx += [vx]
             yy += [vy]
+            if score != "Unknown": ws += [ float(score) ]
+            else : ws += [ 0. ]
 
       print(xx[:10], yy[:10])
       fig, ax = plt.subplots(tight_layout=True)
-      hist = ax.hist2d(xx, yy, bins=[range(int(min(xx)), int(max(xx)) + 2, 1), range(int(min(yy)), int(max(yy)) + 2, 1)], norm=colors.LogNorm(), cmap=plt.cm.Reds)
+      if True : # average score
+        bin_entries = defaultdict(int)
+        bin_weights = defaultdict(int)
+        for x,y,w in zip(xx,yy,ws):
+          bin_entries[ (x,y) ] += 1 
+          bin_weights[ (x,y) ] += w
+
+        ws = []
+        xxx, yyy = [], []
+        for x in range(int(min(xx)), int(max(xx)) + 2, 1) : 
+          for y in range(int(min(yy)), int(max(yy)) + 2, 1) :
+            xxx += [x]
+            yyy += [y]
+            if bin_entries[ (x,y) ] > 0:
+              ws  += [ bin_weights[ (x,y) ] /  bin_entries[ (x,y) ] / 10. ]
+            else : ws += [ 0 ]
+
+        hist = ax.hist2d(xxx, yyy, weights=ws, bins=[range(int(min(xx)), int(max(xx)) + 2, 1), range(int(min(yy)), int(max(yy)) + 2, 1)], cmap=plt.cm.Oranges)
+        fig.colorbar(hist[3], ax=ax)
+
+      else : # number of entries
+        hist = ax.hist2d(xx, yy, bins=[range(int(min(xx)), int(max(xx)) + 2, 1), range(int(min(yy)), int(max(yy)) + 2, 1)], norm=colors.LogNorm(), cmap=plt.cm.Reds)
       ax.set_xlabel(".")
       ax.set_ylabel(".")
       ax.xaxis.set_ticklabels([])
@@ -706,7 +757,7 @@ if False:
   exit()
 
 ###################################### Top tiers data ### stackplots ### 
-if True:
+if False:
   total_number_of_animas = defaultdict(int)
   tmp = all_data[all_data["Score"] != "Unknown"]
   tmp = tmp.sort_values(['Score'], ascending=False)
@@ -770,6 +821,10 @@ if True:
     plt.savefig('images/stack_top' + f + '.pdf', bbox_inches='tight')
   plt.show()
   exit()
+
+
+
+
 
 ###################################### Explore data from "animelist.csv"
 ################### Learn Distance
