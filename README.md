@@ -24,9 +24,9 @@ Run following for basic data exploration:
 In order to create and save plots uncomment the interested parts of the code. The code is not designed to be able to create all plots at the same time.
 Some of the plots are available also as jupiter notebook at [1]. The results are presented at [2, 3].
 
-[1] https://www.kaggle.com/pmandrik/anime-data-exploration
-[2] https://dtf.ru/anime/746483-anime-analiz-myanimelist-net
-[3] https://www.reddit.com/r/anime/
+[1] https://www.kaggle.com/pmandrik/anime-data-exploration  
+[2] https://dtf.ru/anime/746483-anime-analiz-myanimelist-net  
+[3] https://www.reddit.com/r/anime/  
 
 #### Part II. Recommendation System
 
