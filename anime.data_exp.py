@@ -16,8 +16,9 @@ def get_colors(N_colors):
 
 ###################################### Explore data from "anime.csv" ######################################
 all_data = pandas.read_csv("anime.csv", dtype=str) 
-print ( all_data )
-print ("anime.csv feathes = ", list(all_data.columns))
+if False : 
+  print ( all_data )
+  print ("anime.csv feathes = ", list(all_data.columns))
 
 ###################################### distribution of number of voters
 if False : 
@@ -34,18 +35,19 @@ Studios = defaultdict(int)
 for val in all_data['Studios']:
   for v in val.split(','):
     Studios[ v.strip() ] += 1
-# print("anime Studios = ", dict(Studios) )
 
 raw = list(dict(Studios).items())
-# print( raw )
 s_sorted = list(reversed(sorted( raw, key=lambda x : x[1])))
-print(s_sorted[0:50])
+
+if False:
+  print(s_sorted[0:50])
 
 ################### get scores
 Scores = defaultdict(int)
 for val in all_data['Score']:
   Scores[ str(val) ] += 1
-print("anime scores = ", dict(Scores), sum(Scores.values()) )
+if False:
+  print("anime scores = ", dict(Scores), sum(Scores.values()) )
 
 ################### get genres
 Genders = defaultdict(int)
@@ -53,14 +55,16 @@ for val in all_data['Genders']:
   for v in val.split(','):
     Genders[ v.strip() ] += 1
 
-print("anime genders = ", dict(Genders), sum(Genders.values()) )
+if False:
+  print("anime genders = ", dict(Genders), sum(Genders.values()) )
 
 ################### get durations
 Durations = defaultdict(int)
 for val in all_data['Duration']:
   Durations[ val ] += 1
 
-print("anime Durations = ", dict(Durations), sum(Durations.values()) )
+if False:
+  print("anime Durations = ", dict(Durations), sum(Durations.values()) )
 
 ################### get episodes
 Episodes = defaultdict(int)
@@ -69,14 +73,17 @@ for val in all_data['Episodes']:
     Episodes[ 0 ] += 1;
   else : Episodes[ int(val.strip()) ] += 1
 
-print("anime Episodes = ", dict(Episodes), sum(Episodes.values()) )
+if False:
+  print("anime Episodes = ", dict(Episodes), sum(Episodes.values()) )
 #for val in sorted(dict(Episodes).keys()):  print(val, Episodes[val] )
 
 ################### get Types
 Types = defaultdict(int)
 for val in all_data['Type']:
   Types[ val.strip() ] += 1
-print("anime types = ", dict(Types), sum(Types.values()) )
+
+if False:
+  print("anime types = ", dict(Types), sum(Types.values()) )
 
 ################### get Aired fitches
 Month = defaultdict(int)
@@ -116,8 +123,9 @@ if False :
   for t in sorted( old_titles, key=lambda x : x[0] ):
     print( t[1], " (",t[0],",", t[2],")", sep='', end=', ')
 
-print("anime Month = ", dict(Month).keys(), sum(Month.values()) )
-print("anime Year = ", dict(Year).keys(), sum(Year.values()) )
+if False:
+  print("anime Month = ", dict(Month).keys(), sum(Month.values()) )
+  print("anime Year = ", dict(Year).keys(), sum(Year.values()) )
 all_data['Year'] = years
 all_data['Month'] = months
 all_data['Year_class'] = years_classes
@@ -130,7 +138,7 @@ fitches_t2 = ['Producers', 'Licensors', 'Studios'] # plot average ???
 
 ################### Boxplots/Violinplot + Piecharts ######################################
 sort_by_raiting = False
-if True : 
+if False : 
   for f in fitches_t0 :
     all_data[f] = all_data[f].str.split(', ')
     
@@ -175,6 +183,7 @@ if True :
       ax.set_yticklabels( [f[0] for f in sorted_datas] )
 
     ax.set_xlabel('MyAnimelist Score')
+    plt.grid(axis = 'x',  linestyle='-', linewidth=1, color=get_colors(10)[2])
     plt.savefig('images/box_' + f + '.pdf', bbox_inches='tight')
 
     # pie
@@ -208,82 +217,94 @@ if True :
   exit()
 
 ################### Stackplots per Year ######################################
-total_number_of_animas = defaultdict(int)
-for f in ['Genders', 'Type', 'Source', 'Rating'] :
-  continue
-  all_data[f] = all_data[f].str.split(', ')
-  datas = {}
-  for year in [ str(y) for y in range(1910, 2030) ]:
-    datas[ year ] = defaultdict(list)
+if False:
+  per_4_years = True  
 
-  all_types = []
   total_number_of_animas = defaultdict(int)
-  for score, types, year in zip( all_data[score_var], all_data[f], all_data["Year"] ):
-    if year == "Unknown":  continue
-    if score == "Unknown": continue
-    for type in types :
-      datas[year][ type ] += [ float(score) ]
-      total_number_of_animas[year] += 1
-      all_types += [ type ]
+  for f in ['Genders', 'Type', 'Source', 'Rating'] :
+    all_data[f] = all_data[f].str.split(', ')
+    datas = {}
+    for year in [ str(y) for y in range(1910, 2030) ]:
+      datas[ year ] = defaultdict(list)
 
-  x_data = defaultdict(list)
-  for type in list(set(all_types)):
-    for year in [ str(y) for y in range(1980, 2021) ]:
-      x_data[ type ] += [ len( datas[ year ][ type ] ) ]
+    all_types = []
+    total_number_of_animas = defaultdict(int)
+    for score, types, year, air_type in zip( all_data[score_var], all_data[f], all_data["Year"], all_data["Type"]  ):
+      if year == "Unknown":  continue
+      if score == "Unknown": continue
+      if air_type not in ["TV"] : continue
+      for type in types :
+        if year not in datas : continue
+        if per_4_years : 
+          yup_min = (int(year)//4 + 0) * 4
+          yup_max = (int(year)//4 + 1) * 4
+          for y in range(yup_min, yup_max):
+            datas[str(y)][ type ] += [ float(score) ]
+            total_number_of_animas[str(y)] += 1
+        else :
+          datas[year][ type ] += [ float(score) ]
+          total_number_of_animas[year] += 1
+        all_types += [ type ]
 
-  sorted_datas = sorted(x_data.items(), key=lambda f : -sum(f[1]) )
+    x_data = defaultdict(list)
+    for type in list(set(all_types)):
+      for year in [ str(y) for y in range(1958, 2021) ]:
+        x_data[ type ] += [ len( datas[ year ][ type ] ) ]
 
-  for i in range(len(sorted_datas[0][1])) :
-    summ = sum( [ ff[1][i] for ff in sorted_datas ] )
-    for j in range(len(sorted_datas)):
-      sorted_datas[j][1][i] /= summ
+    sorted_datas = sorted(x_data.items(), key=lambda f : -sum(f[1]) )
 
-  if len(sorted_datas) > 18:
-    others = []
     for i in range(len(sorted_datas[0][1])) :
-      summ = sum( [ ff[1][i] for ff in sorted_datas[18:] ] )
-      others += [ summ ]
-    sorted_datas = sorted_datas[:18] + [ ["...", others] ]
+      summ = sum( [ ff[1][i] for ff in sorted_datas ] )
+      if summ == 0 : continue
+      for j in range(len(sorted_datas)):
+        sorted_datas[j][1][i] /= summ
 
-  colorz = get_colors( 100 )
+    if len(sorted_datas) > 18:
+      others = []
+      for i in range(len(sorted_datas[0][1])) :
+        summ = sum( [ ff[1][i] for ff in sorted_datas[18:] ] )
+        others += [ summ ]
+      sorted_datas = sorted_datas[:18] + [ ["...", others] ]
 
-  fig, ax = plt.subplots()
-  ax.stackplot([y for y in range(1980, 2021)], [f[1] for f in sorted_datas], labels=[f[0] for f in sorted_datas], colors=colorz )
-  ax.set_xlabel('Year')
-  plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-  fig.subplots_adjust(right=0.5)
-  fig.set_figwidth( 2*fig.get_figwidth() )
+    colorz = get_colors( 100 )
 
-  ax.set_title( "Anime " + f )
-  if f == "Genders" :    ax.set_title( "Anime Genre" )
-  if f == "Rating" :     ax.set_title( "Anime Age rating" )
-  if f == 'Year_class' : ax.set_title( "Anime Release year" )
-  if f == 'Month' :      ax.set_title( "Anime Release month" )
+    fig, ax = plt.subplots()
+    ax.stackplot([y for y in range(1958, 2021)], [f[1] for f in sorted_datas], labels=[f[0] for f in sorted_datas], colors=colorz )
+    ax.set_xlabel('Year')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+    fig.subplots_adjust(right=0.5)
+    fig.set_figwidth( 2*fig.get_figwidth() )
 
-  ax.set_ylabel('Fraction of Anime')
-  plt.savefig('images/stack_' + f + '.pdf', bbox_inches='tight')
+    ax.set_title( "Anime " + f )
+    if f == "Genders" :    ax.set_title( "Anime Genre" )
+    if f == "Rating" :     ax.set_title( "Anime Age rating" )
+    if f == 'Year_class' : ax.set_title( "Anime Release year" )
+    if f == 'Month' :      ax.set_title( "Anime Release month" )
+
+    ax.set_ylabel('Fraction of Anime')
+    plt.savefig('images/stack_' + f + '.pdf', bbox_inches='tight')
+
+  if total_number_of_animas:
+    total_number_of_animas = sorted(total_number_of_animas.items(), key=lambda f : int(f[0]) )
+    print( total_number_of_animas )
+
+    plt.plot( [int(f[0]) for f in total_number_of_animas], [f[1] for f in total_number_of_animas] )
+    plt.legend('',frameon=False)
+    plt.xlabel('Year')
+    plt.title( "Number of released Anime per year" )
+    plt.ylabel('Number of Anime')
+    plt.savefig('images/stack_total.pdf', bbox_inches='tight')
+
+    cumulative = [ total_number_of_animas[0][1] ]
+    for f in  total_number_of_animas[1:]:
+      cumulative.append( cumulative[-1] + f[1] )
+      print( cumulative[-1], f[1] )
+    plt.plot( [int(f[0]) for f in total_number_of_animas], cumulative )
+    plt.xlabel('Year')
+    plt.title( "Total number of Anime" )
+    plt.ylabel('Number of Anime')
+    plt.savefig('images/stack_total_sum.pdf', bbox_inches='tight')
   exit()
-
-if total_number_of_animas:
-  total_number_of_animas = sorted(total_number_of_animas.items(), key=lambda f : int(f[0]) )
-  print( total_number_of_animas )
-
-  plt.plot( [int(f[0]) for f in total_number_of_animas], [f[1] for f in total_number_of_animas] )
-  plt.legend('',frameon=False)
-  plt.xlabel('Year')
-  plt.title( "Number of released Anime per year" )
-  plt.ylabel('Number of Anime')
-  plt.savefig('images/stack_total.pdf', bbox_inches='tight')
-
-  cumulative = [ total_number_of_animas[0][1] ]
-  for f in  total_number_of_animas[1:]:
-    cumulative.append( cumulative[-1] + f[1] )
-    print( cumulative[-1], f[1] )
-  plt.plot( [int(f[0]) for f in total_number_of_animas], cumulative )
-  plt.xlabel('Year')
-  plt.title( "Total number of Anime" )
-  plt.ylabel('Number of Anime')
-  plt.savefig('images/stack_total_sum.pdf', bbox_inches='tight')
 
 ################### Number of Voters ######################################
 if False:
@@ -391,7 +412,6 @@ if False:
     title  = 'Episodes_' + str(N)
     xtitle = str( ([0] + N_episodes_regions)[i] ) + "-" + str(N_episodes_regions[i])
     datas[ xtitle ] = all_data[all_data[title] == 1][all_data["Score"] != "Unknown"]["Score"].tolist()
-  # print( datas )
 
   sorted_datas = sorted(datas.items(), key=lambda f : int(f[0].split("-")[0]) )
 
@@ -418,6 +438,7 @@ if False:
 
 ################### create groups of animas base on duration
 if False :
+  print("Duration ... ")
   times = []
   weights = []
   def get_time( time_raw ):
@@ -433,8 +454,6 @@ if False :
     return time
 
   for key, value in Durations.items():
-    #if get_time( key ) < 0.25:
-    #  print( get_time( key ), key, value )
     times += [ get_time( key ) ]
     weights += [ value ]
 
@@ -458,7 +477,6 @@ if False :
     year   = tmp["Year"].to_list()
     h2_x_year += [ float(s) if s != 'Unknown' else 2000 for s in year ]
 
-  # print(h2_x, h2_y)
   fig, ax = plt.subplots(tight_layout=True)
   hist = ax.hist2d(h2_x, h2_y, bins=[np.arange(1, 10, 0.25), np.arange(0, 160, 2.5)], norm=colors.LogNorm())
   ax.set_xlabel('MyAnimelist Score')
@@ -473,11 +491,44 @@ if False :
     
   exit()
 
+### distribution of duration based on genre
+if False :
+  def get_time( time_raw ):
+    items = time_raw.split()
+    time = -1
+    for i, val in enumerate(items):
+      if val == "sec." : 
+        time += int( items[i-1] )/60.
+      if val == "min." : 
+        time += int( items[i-1] )
+      if val == "hr." : 
+        time += int( items[i-1] )*60.
+    return time
+
+  h1 = []
+  h2 = []
+  for time_, genre in zip(all_data["Duration"],all_data["Genders"]):
+    time = get_time( time_ )
+
+    if "Dementia" in genre : h1 += [ time ]
+    else                   : h2 += [ time ]
+
+  fig, ax = plt.subplots(tight_layout=True)
+  # hist = ax.hist( [h1, h2], bins=20, histtype='step', linewidth=2, alpha=0.7, label=['Dementia','Not Dementia'])
+  plt.hist( h1, bins=50, histtype='step', linewidth=2, alpha=0.7, label=['Dementia'], normed=True)
+  plt.hist( h2, bins=50, histtype='step', linewidth=2, alpha=0.7, label=['Not Dementia'], normed= True)
+  plt.legend(loc='upper right')
+
+  ax.set_ylabel('Fraction of Anime')
+  ax.set_xlabel('Duration of Anime per episode [min.]')
+  plt.savefig('images/hist_dem_distribution.pdf', bbox_inches='tight')
+    
+  exit()
+
+
 ################### 2d hists
 if False :
   for f in fitches_t1 :
-    # print( f, all_data[f] )
-    # all_data.plot.scatter(x=score_var, y=f);
     x,y = [],[]
     for score, fs in zip( all_data[score_var], all_data[f] ):
       if score == "Unknown": continue
@@ -791,19 +842,12 @@ if False:
       for t in all_types :
         if t not in keys : all_results[i][t] = 0
 
-      #print( "origin:", all_results[i] )
       vals = all_results[i].items()
       vals = sorted( vals, key=lambda x : x[0] )
       summ = sum( [ x[1] for x in vals ] )
       all_results[i] = [ float(x[1]) / summ for x in vals ]
-      #print( "fin:", all_results[i], all_types_sorted )
-
-    #for item in all_results:
-    #  print(len(item), len(all_types))
 
     colorz = get_colors( 100 )
-
-    #print( len(all_results), len(tops) )
 
     fig, ax = plt.subplots()
     ax.stackplot( [int(x) for x in tops], [ [x[i] for x in all_results] for i in range(len(all_results[0]))], labels=all_types_sorted, colors=colorz )
@@ -822,144 +866,7 @@ if False:
   plt.show()
   exit()
 
-
-
-
-
-###################################### Explore data from "animelist.csv"
-################### Learn Distance
-if True:
-  def get_ipop(val):
-    if val == 'Unknown': return 9999999
-    if val == '0' : return 9999999
-    return int(val)
-
-  all_data = all_data.assign(iPopularity=[get_ipop(i) for i in all_data['Popularity']])
-
-  all_data = all_data.sort_values(['iPopularity'], ascending=True)
-  all_data = all_data.reset_index(drop=True)
-
-  # 1, 450
-  index_A = 0
-  index_B = 1
-
-  id_A = int(all_data["MAL_ID"][index_A])
-  id_B = int(all_data["MAL_ID"][index_B])
-
-  name_A = all_data["English name"][index_A]
-  name_B = all_data["English name"][index_B]
-
-  print(id_A, id_B, all_data)
-
-  print( "Most populare Anime are:" )
-  for i in range(10):
-    print( i, all_data["MAL_ID"][i], all_data["English name"][i], all_data["Score"][i], all_data["iPopularity"][i] )
-
-if True :
-  ratings_data = {}
-  def process(user_data):
-    status_dic = { 1 : "Currently Watching", 2 : "Completed", 3 : "On Hold", 4 : "Dropped", 6 : "Plan to Watch" }
-
-    xs, ys = [], []
-    last_id = -1;
-    user_scores = defaultdict(int)
-    for user_id, anime_id, rating, status in zip(user_data["user_id"], user_data["anime_id"], user_data["rating"], user_data["watching_status"]) :
-      if rating == 0 : continue
-      if last_id != user_id and user_id:
-        last_id = user_id
-
-        if id_A in user_scores and id_B in user_scores:
-          score_A = int(user_scores[id_A])
-          score_B = int(user_scores[id_B])
-          for anime, score in user_scores.items():
-            if anime == id_A or anime == id_B : continue
-            if anime not in ratings_data:
-              ratings_data[anime] = [ [score, score_A, score_B] ]
-            else :
-              data = ratings_data[anime]
-              ratings_data[anime] += [ [score, score_A, score_B] ]
-
-        user_scores = defaultdict(int)
-
-      user_scores[anime_id] = rating
-
-  i_max = 10
-  chunksize = 100000
-  reader = pandas.read_csv("data/animelist.csv", chunksize=chunksize)
-  for i, chunk in enumerate(reader):
-    print("chunk N = ", i)
-    process(chunk)
-    if i > i_max : break
-
-  x, y = [], []
-  for key, val in ratings_data.items():
-    N = len(val)
-    if N < 20 : continue
-    mean, mean_a, mean_b = 0., 0., 0. 
-    for xx in val : 
-      mean += xx[0]
-      mean_a += xx[1]
-      mean_b += xx[2]
-
-    mean, mean_a, mean_b = mean / N, mean_a / N, mean_b / N
-
-    
-    sigma, sigma_a, sigma_b = 0., 0., 0. 
-    cx, cy = 0, 0
-    for xx in val :
-      cx += (mean - xx[0])*(mean_a - xx[1]) 
-      cy += (mean - xx[0])*(mean_b - xx[2])
-
-      sigma   += pow((mean - xx[0]),   2) 
-      sigma_a += pow((mean_a - xx[1]), 2)
-      sigma_b += pow((mean_b - xx[2]), 2)
-    cx, cy = cx / pow(sigma, 0.5) / pow(sigma_a, 0.5), cy / pow(sigma, 0.5) / pow(sigma_b, 0.5)
-
-    if cx >  0.6 :
-      print(all_data.loc[all_data["MAL_ID"] == str(key)]["Name"]) 
-      print(key, cx, mean_a, mean)
-      print(val)
-
-    x += [ cx ]
-    y += [ cy ]
-
-  # print(x,y)
-
-  fig, ax = plt.subplots(tight_layout=True)
-  # hist = ax.plot(x, y, 'dg', markersize=1.)
-  hist = ax.hist2d(x, y, bins=100, norm=colors.LogNorm())
-  #hist = ax.hist(x, bins=100)
-  ax.set_xlabel( name_A )
-  ax.set_ylabel( name_B )
-  plt.show()
-
-###################################### Explore correlation data from "anime_correlations.db"
-import sqlite3
-if False :
-  con     = sqlite3.connect('anime_correlations.db')
-  cursor  = con.cursor()
-
-  cursor.execute("SELECT * FROM correlations LIMIT 100")
-  print(cursor.fetchall())
-
-
-###################################### Explore correlation data from "all_user_scores.db"
-# get range of ids of selected users
-# (0, 353403)
-if False:
-  con     = sqlite3.connect('all_user_scores.db')
-  cursor  = con.cursor()
-  cursor.execute('''SELECT DISTINCT MIN(id_user), MAX(id_user) FROM correlations''')
-  print( cursor.fetchall() )
-
-###################################### Explore correlation data from "anime_features.db"
-if False:
-  con     = sqlite3.connect('anime_features.db')
-  cursor  = con.cursor()
-  cursor.execute('''SELECT * FROM features''')
-  print( cursor.fetchall() )
-
-
+print(__file__, " - please activate corresponding parts of the code to produce plots or print out information!")
 
 
 

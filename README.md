@@ -21,8 +21,8 @@ Anime Recommendation Database 2020 [0]
 Run following for basic data exploration:
 * mkdir images; python anime.data_exp.py
 
-In order to create and save plots uncomment the intrested parts of the code. The code was not designed to be able to create all plots at the same time.
-Some of the plots are available also as jupiter notebook at [1]
+In order to create and save plots uncomment the interested parts of the code. The code was not designed to be able to create all plots at the same time.
+Some of the plots are available also as jupiter notebook at [1].
 
 [1] https://www.kaggle.com/pmandrik/anime-data-exploration
 
